@@ -170,7 +170,7 @@ class ArgsParser(object):
                 result[arg.name] = arg.default
         return result
 
-from flask import url_for, jsonify
+from flask import url_for, jsonify, make_response
 class InfoView(RestView):
     def map(self):
         links = []
