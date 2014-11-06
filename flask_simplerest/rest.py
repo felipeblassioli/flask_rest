@@ -77,14 +77,17 @@ def wrap_response(f):
         except ApiError, err:
             resp = {'error': err.__dict__}
         except Exception, err:
-            class_name = err.__class__.__name__
-            if class_name.find("DoesNotExist") != -1:
-                resp = {'error': RowDoesNotExist(err).__dict__}
-            elif class_name.find("IntegrityError") != -1:
-                resp = {'error': DuplicateKeyError(err).__dict__}
+            if current_app.config['RAISE_EXCEPTIONS']:
+                raise err
             else:
-                current_app.logger.error(repr(err) + "msg=" + str(err))
-                resp = {'error': ApiError.from_exception(err).__dict__}
+                class_name = err.__class__.__name__
+                if class_name.find("DoesNotExist") != -1:
+                    resp = {'error': RowDoesNotExist(err).__dict__}
+                elif class_name.find("IntegrityError") != -1:
+                    resp = {'error': DuplicateKeyError(err).__dict__}
+                else:
+                    current_app.logger.error(repr(err) + "msg=" + str(err))
+                    resp = {'error': ApiError.from_exception(err).__dict__}
         if isinstance(resp, Response):
             return resp
         elif isinstance(resp, list):
@@ -125,7 +128,7 @@ class RestView(FlaskView):
             fmt = "{:<45} response: {}"
             if 'LOG_MAX_RESP_SIZE' in current_app.config:
                 end = current_app.config['LOG_MAX_RESP_SIZE']
-                msg = fmt.format(req,resp[:end])
+                msg = fmt.format(req,resp[:end]) + 'length=[{}]'.format(len(resp))
             else:
                 msg = fmt.format(req,resp)
             current_app.logger.debug(msg)
