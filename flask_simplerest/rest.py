@@ -122,13 +122,13 @@ class RestView(FlaskView):
             current_app.logger.debug("{:<45} response: text/html".format(req))
         else:
             resp = str(response.data)
-            log_msg = "{:<45} response: {}"
+            fmt = "{:<45} response: {}"
             if 'LOG_MAX_RESP_SIZE' in current_app.config:
                 end = current_app.config['LOG_MAX_RESP_SIZE']
-                log_msg.format(req,resp[:end])
+                msg = fmt.format(req,resp[:end])
             else:
-                log_msg.format(req,resp)
-            current_app.logger.debug(log_msg)
+                msg = fmt.format(req,resp)
+            current_app.logger.debug(msg)
         return response
 
 
