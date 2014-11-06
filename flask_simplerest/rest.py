@@ -113,7 +113,7 @@ class RestView(FlaskView):
         if name in self.parsers:
             self.args = self.parsers[name].parse(request)
         else:
-            print "WHAT THE FUCK"
+            current_app.logger.warning("Parser not found! name=[%s]" % name)
             self.args = {}
         
     def after_request(self, name, response):
@@ -121,8 +121,14 @@ class RestView(FlaskView):
         if response.mimetype == 'text/html':
             current_app.logger.debug("{:<45} response: text/html".format(req))
         else:
-            current_app.logger.debug(
-                "{:<45} response: {}".format(req, str(response.data)))
+            resp = str(response.data)
+            log_msg = "{:<45} response: {}"
+            if 'LOG_MAX_RESP_SIZE' in current_app.config:
+                end = current_app.config['LOG_MAX_RESP_SIZE']
+                log_msg.format(req,resp[:end])
+            else:
+                log_msg.format(req,resp)
+            current_app.logger.debug(log_msg)
         return response
 
 
