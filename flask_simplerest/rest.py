@@ -197,3 +197,13 @@ class InfoView(RestView):
             )
             return make_response(render_template('view_log.html', **params))
         return dict(result="error")
+
+    def config(self):
+        resp = dict()
+        for k,v in current_app.config.items():
+            try:
+                dumps(v)
+                resp[k] = v
+            except Exception, err:
+                resp[k] = str(v)
+        return resp
