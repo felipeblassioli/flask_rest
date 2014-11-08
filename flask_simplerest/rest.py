@@ -77,7 +77,7 @@ def wrap_response(f):
         except ApiError, err:
             resp = {'error': err.__dict__}
         except Exception, err:
-            if current_app.config['RAISE_EXCEPTIONS']:
+            if current_app.config.pop('RAISE_EXCEPTIONS', True):
                 raise err
             else:
                 class_name = err.__class__.__name__
