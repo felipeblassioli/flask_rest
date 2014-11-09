@@ -211,6 +211,8 @@ class InfoView(RestView):
 
 #if not current_app.config.pop('USE_DEFAULT_JSON_ENCODER', False):
 from flask.json import JSONEncoder
+import calendar
+from datetime import datetime
 class CustomJSONEncoder(JSONEncoder):
 
     def default(self, obj, *args, **kwargs):
