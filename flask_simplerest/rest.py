@@ -23,22 +23,19 @@ def wrap_response(f):
     """
     @wraps(f)
     def wrapped_f(*args, **kwargs):
-        resp = f(*args, **kwargs)
-        print 'resp', resp
-        # try:
-            
-        # except Exception as error:
-        #     raise error
-            # if current_app.config.pop('RAISE_EXCEPTIONS', True):
-            #     raise error
-            # else:
-            #     class_name = err.__class__.__name__
-            #     if class_name.find("DoesNotExist") != -1:
-            #         raise RowDoesNotExist(error)
-            #     elif class_name.find("IntegrityError") != -1:
-            #         raise DuplicateKeyError(error)
-            #     else:
-            #         raise ApiError.from_exception(error)
+        try:
+            resp = f(*args, **kwargs)
+        except Exception as error:
+            if current_app.config.pop('RAISE_EXCEPTIONS', True):
+                raise error
+            else:
+                class_name = err.__class__.__name__
+                if class_name.find("DoesNotExist") != -1:
+                    raise RowDoesNotExist(error)
+                elif class_name.find("IntegrityError") != -1:
+                    raise DuplicateKeyError(error)
+                else:
+                    raise ApiError.from_exception(error)
         if isinstance(resp, Response):
             return resp
         elif isinstance(resp, list):
