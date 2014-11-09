@@ -208,27 +208,41 @@ class InfoView(RestView):
                 resp[k] = str(v)
         return resp
 
-if not current_app.config.pop('USE_DEFAULT_JSON_ENCODER', False):
-    from json import JSONEncoder
-    class CustomJSONEncoder(JSONEncoder):
+#if not current_app.config.pop('USE_DEFAULT_JSON_ENCODER', False):
+from json import JSONEncoder
+class CustomJSONEncoder(JSONEncoder):
 
-        def default(self, obj):
-            if hasattr(obj,'to_json'):
-                return obj.to_json()
-            try:
-                if isinstance(obj, datetime):
-                    if obj.utcoffset() is not None:
-                        obj = obj - obj.utcoffset()
-                    millis = int(
-                        calendar.timegm(obj.timetuple()) * 1000 +
-                        obj.microsecond / 1000
-                    )
-                    return millis
-                iterable = iter(obj)
-            except TypeError:
-                pass
-            else:
-                return list(iterable)
-            return JSONEncoder.default(self, obj)
+    def default(self, obj):
+        if hasattr(obj,'to_json'):
+            return obj.to_json()
+        try:
+            if isinstance(obj, datetime):
+                if obj.utcoffset() is not None:
+                    obj = obj - obj.utcoffset()
+                millis = int(
+                    calendar.timegm(obj.timetuple()) * 1000 +
+                    obj.microsecond / 1000
+                )
+                return millis
+            iterable = iter(obj)
+        except TypeError:
+            pass
+        else:
+            return list(iterable)
+        return JSONEncoder.default(self, obj)
 
-    current_app.json_encoder = CustomJSONEncoder
+class RestAPI(object):
+    def __init__(self, app, use_custom_json_encoder=True):
+        self.app = app
+        if use_custom_json_encoder:
+            self.app.json_encoder = CustomJSONEncoder
+
+    def register(self, views):
+        self.app.view_classes = {}
+        for v in views:
+            self.app.view_classes[v.__name__] = v
+        for v in self.app.view_classes.values():
+            v.register(self.app)
+
+        InfoView.register(self.app)
+        print self.app.view_classes
