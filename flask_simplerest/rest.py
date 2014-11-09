@@ -207,3 +207,28 @@ class InfoView(RestView):
             except Exception, err:
                 resp[k] = str(v)
         return resp
+
+if not current_app.config.pop('USE_DEFAULT_JSON_ENCODER', False):
+    from json import JSONEncoder
+    class CustomJSONEncoder(JSONEncoder):
+
+        def default(self, obj):
+            if hasattr(obj,'to_json'):
+                return obj.to_json()
+            try:
+                if isinstance(obj, datetime):
+                    if obj.utcoffset() is not None:
+                        obj = obj - obj.utcoffset()
+                    millis = int(
+                        calendar.timegm(obj.timetuple()) * 1000 +
+                        obj.microsecond / 1000
+                    )
+                    return millis
+                iterable = iter(obj)
+            except TypeError:
+                pass
+            else:
+                return list(iterable)
+            return JSONEncoder.default(self, obj)
+
+    current_app.json_encoder = CustomJSONEncoder
