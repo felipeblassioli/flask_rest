@@ -208,11 +208,12 @@ class InfoView(RestView):
                 resp[k] = str(v)
         return resp
 
+
 #if not current_app.config.pop('USE_DEFAULT_JSON_ENCODER', False):
-from json import JSONEncoder
+from flask.json import JSONEncoder
 class CustomJSONEncoder(JSONEncoder):
 
-    def default(self, obj):
+    def default(self, obj, *args, **kwargs):
         if hasattr(obj,'to_json'):
             return obj.to_json()
         try:
