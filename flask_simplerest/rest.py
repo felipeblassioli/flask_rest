@@ -15,56 +15,7 @@ from functools import wraps
 from flask import request, abort, jsonify, Response, current_app
 from flask.ext.classy import FlaskView
 
-class Error(Exception):
-    """ Base class for Errors """
-    pass
-
-
-class ApiError(Error):
-
-    """
-    An error that will be jsonified and sent to the client (hopefully)
-    """
-
-    def __init__(self, emsg, etype="GenericException", ecode=666, details=None):
-        self.message = emsg
-        self.type = etype
-        self.code = ecode
-        if details != None:
-            self.details = details
-
-    @staticmethod
-    def from_exception(err):
-        return ApiError(str(err))
-
-
-class RowDoesNotExist(ApiError):
-
-    def _parse(self, exception):
-        name = exception.__class__.__name__
-        details = str(exception)
-        schema = name[:name.find("DoesNotExist")]
-        row_id = details[details.find('PARAMS: ['):][9]
-        msg = "Row not found for id = [{}]. Schema = [{}].".format(
-            row_id, schema)
-        return msg, details
-
-    def __init__(self, exception):
-        msg, details = self._parse(exception)
-        ApiError.__init__(self, msg, "DatabaseException", 110, details=details)
-
-
-class DuplicateKeyError(ApiError):
-
-    def _parse(self, exception):
-        details = str(exception)
-        msg = exception.args[1]
-        # msg[msg.find('Duplicate'):-2]
-        return msg, details
-
-    def __init__(self, exception):
-        msg, details = self._parse(exception)
-        ApiError.__init__(self, msg, "DatabaseException", 120, details=details)
+from .error import ApiError, RowDoesNotExist, DuplicateKeyError
 
 def wrap_response(f):
     """Decorator that jsonifies view responses
@@ -72,28 +23,26 @@ def wrap_response(f):
     """
     @wraps(f)
     def wrapped_f(*args, **kwargs):
-        try:
-            resp = f(*args, **kwargs)
-        except ApiError, err:
-            resp = {'error': err.__dict__}
-        except Exception, err:
-            if current_app.config.pop('RAISE_EXCEPTIONS', True):
-                raise err
-            else:
-                class_name = err.__class__.__name__
-                if class_name.find("DoesNotExist") != -1:
-                    resp = {'error': RowDoesNotExist(err).__dict__}
-                elif class_name.find("IntegrityError") != -1:
-                    resp = {'error': DuplicateKeyError(err).__dict__}
-                else:
-                    current_app.logger.error(repr(err) + "msg=" + str(err))
-                    resp = {'error': ApiError.from_exception(err).__dict__}
+        resp = f(*args, **kwargs)
+        print 'resp', resp
+        # try:
+            
+        # except Exception as error:
+        #     raise error
+            # if current_app.config.pop('RAISE_EXCEPTIONS', True):
+            #     raise error
+            # else:
+            #     class_name = err.__class__.__name__
+            #     if class_name.find("DoesNotExist") != -1:
+            #         raise RowDoesNotExist(error)
+            #     elif class_name.find("IntegrityError") != -1:
+            #         raise DuplicateKeyError(error)
+            #     else:
+            #         raise ApiError.from_exception(error)
         if isinstance(resp, Response):
             return resp
         elif isinstance(resp, list):
             return jsonify({'data': resp})
-        elif isinstance(resp, ApiError):
-            return jsonify({'error': resp.__dict__})
         else:
             return jsonify(resp)
     return wrapped_f
@@ -213,9 +162,10 @@ class InfoView(RestView):
 from flask.json import JSONEncoder
 import calendar
 from datetime import datetime
-class CustomJSONEncoder(JSONEncoder):
+class DefaultJSONEncoder(JSONEncoder):
 
     def default(self, obj, *args, **kwargs):
+        print 'whaaaaaaaaaaat'
         if hasattr(obj,'to_json'):
             return obj.to_json()
         try:
@@ -234,11 +184,21 @@ class CustomJSONEncoder(JSONEncoder):
             return list(iterable)
         return JSONEncoder.default(self, obj)
 
+def default_error_handler(error):
+    # This sucks: the jsonify dumpings won`t allow to_json() to return dict(error)
+    resp = jsonify(dict(error=error))
+    resp.status_code = error.status_code
+    current_app.logger.error(repr(error) + "msg=" + str(error))
+    return resp
+
 class RestAPI(object):
-    def __init__(self, app, use_custom_json_encoder=True):
+    def __init__(self, app, json_encoder=DefaultJSONEncoder, error_handler=default_error_handler):
         self.app = app
-        if use_custom_json_encoder:
-            self.app.json_encoder = CustomJSONEncoder
+        self.json_encoder = json_encoder
+        self.error_handler = error_handler
+
+        self.app.json_encoder = self.json_encoder
+        self.app.register_error_handler(Exception, default_error_handler)
 
     def register(self, views):
         self.app.view_classes = {}
