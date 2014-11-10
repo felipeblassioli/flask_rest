@@ -80,7 +80,6 @@ class RestView(FlaskView):
             current_app.logger.debug(msg)
         return response
 
-
 class Argument(object):
 
     def __init__(self, name, default=None, required=True, type=unicode, description=None, case_sensitive=True):
@@ -155,14 +154,12 @@ class InfoView(RestView):
         return resp
 
 
-#if not current_app.config.pop('USE_DEFAULT_JSON_ENCODER', False):
 from flask.json import JSONEncoder
 import calendar
 from datetime import datetime
 class DefaultJSONEncoder(JSONEncoder):
 
     def default(self, obj, *args, **kwargs):
-        print 'whaaaaaaaaaaat'
         if hasattr(obj,'to_json'):
             return obj.to_json()
         try:
@@ -184,25 +181,25 @@ class DefaultJSONEncoder(JSONEncoder):
 def default_error_handler(error):
     # This sucks: the jsonify dumpings won`t allow to_json() to return dict(error)
     resp = jsonify(dict(error=error))
-    resp.status_code = error.status_code
+    if hasattr(error, 'status_code'):
+        resp.status_code = error.status_code
+    else:
+        resp.status_code = 400
     current_app.logger.error(repr(error) + "msg=" + str(error))
     return resp
 
 class RestAPI(object):
     def __init__(self, app, json_encoder=DefaultJSONEncoder, error_handler=default_error_handler):
         self.app = app
+        self.app.view_classes = {}
         self.json_encoder = json_encoder
         self.error_handler = error_handler
 
         self.app.json_encoder = self.json_encoder
         self.app.register_error_handler(Exception, default_error_handler)
 
-    def register(self, views):
-        self.app.view_classes = {}
-        for v in views:
-            self.app.view_classes[v.__name__] = v
-        for v in self.app.view_classes.values():
-            v.register(self.app)
-
         InfoView.register(self.app)
-        print self.app.view_classes
+
+    def register(self, view):
+        self.app.view_classes[view.__name__] = view
+        view.register(self.app)
