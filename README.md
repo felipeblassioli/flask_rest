@@ -2,7 +2,9 @@
 
 Develop a restful api with Flask.
 
-Create views that extend RestView and return objects that can be jsonified
+Create views that extend RestView and return objects that can be jsonified.
+
+RestView extends [flask-classy.FlaskView](https://github.com/apiguy/flask-classy/)
 
 ## Example
 
@@ -21,9 +23,9 @@ class ComplexObject(object):
 		self.id = id
 		self.dt_start = datetime.datetime.now()
 
+	# Called by flask.jsonify
 	def to_json(self):
 		return self.__dict__
-
 
 class SampleView(RestView):
 	def index(self):
@@ -36,6 +38,8 @@ class SampleView(RestView):
 
 rest.register(SampleView)
 ```
+
+### Consuming
 
 ```bash
 $ curl http://127.0.0.1:5000/sample/
