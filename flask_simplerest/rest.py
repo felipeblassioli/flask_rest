@@ -191,18 +191,15 @@ def default_error_handler(error):
 class RestAPI(object):
     def __init__(self, app, json_encoder=DefaultJSONEncoder, error_handler=default_error_handler):
         self.app = app
+        self.app.view_classes = {}
         self.json_encoder = json_encoder
         self.error_handler = error_handler
 
         self.app.json_encoder = self.json_encoder
         self.app.register_error_handler(Exception, default_error_handler)
 
-    def register(self, views):
-        self.app.view_classes = {}
-        for v in views:
-            self.app.view_classes[v.__name__] = v
-        for v in self.app.view_classes.values():
-            v.register(self.app)
-
         InfoView.register(self.app)
-        print self.app.view_classes
+
+    def register(self, view):
+        self.app.view_classes[view.__name__] = view
+        v.register(self.app)
