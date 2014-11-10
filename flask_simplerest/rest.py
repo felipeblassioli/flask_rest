@@ -203,3 +203,4 @@ class RestAPI(object):
     def register(self, view):
         self.app.view_classes[view.__name__] = view
         view.register(self.app)
+
