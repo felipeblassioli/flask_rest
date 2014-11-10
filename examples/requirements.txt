@@ -1,0 +1,2 @@
+Flask
+-e git+https://github.com/felipeblassioli/flask_rest.git#egg=Flask-SimpleRest-0.3.1
