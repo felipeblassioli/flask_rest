@@ -204,7 +204,7 @@ class RestAPI(object):
         self.app.view_classes[view.__name__] = view
         view.register(self.app)
 
-    def register_all(self, view_list):
-        for v in view_list:
+    def register_all(self, *args):
+        for v in args:
             self.register(v)
 
