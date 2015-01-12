@@ -15,7 +15,7 @@ from setuptools import setup
 
 setup(
     name='Flask-SimpleRest',
-    version='0.3.2',
+    version='0.3.3',
     url='https://github.com/felipeblassioli/flask_rest',
     author='Felipe Blassioli',
     author_email='felipeblassioli@gmail.com',

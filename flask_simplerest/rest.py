@@ -40,6 +40,8 @@ def wrap_response(f):
             return resp
         elif isinstance(resp, list):
             return jsonify({'data': resp})
+        elif hasattr(resp,'to_json'):
+            return jsonify(resp.to_json())
         else:
             return jsonify(resp)
     return wrapped_f
@@ -179,6 +181,8 @@ class DefaultJSONEncoder(JSONEncoder):
         return JSONEncoder.default(self, obj)
 
 def default_error_handler(error):
+    if current_app.config.pop('RAISE_EXCEPTIONS', True):
+        raise error
     # This sucks: the jsonify dumpings won`t allow to_json() to return dict(error)
     resp = jsonify(dict(error=error))
     if hasattr(error, 'status_code'):
