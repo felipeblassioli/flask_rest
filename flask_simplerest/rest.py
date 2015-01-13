@@ -121,7 +121,7 @@ class ArgsParser(object):
         for arg in self.args:
             if arg.name in params:
                 if type(params[arg.name]) != arg.type:
-                    result[arg.name] = self.coerce(params[arg.name])
+                    result[arg.name] = arg.coerce(params[arg.name])
                 else:
                     result[arg.name] = params[arg.name]
             elif arg.required:
