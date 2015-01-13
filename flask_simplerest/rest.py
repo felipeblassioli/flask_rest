@@ -159,12 +159,15 @@ class InfoView(RestView):
 from flask.json import JSONEncoder
 import calendar
 from datetime import datetime
+from decimal import Decimal
 class DefaultJSONEncoder(JSONEncoder):
 
     def default(self, obj, *args, **kwargs):
         if hasattr(obj,'to_json'):
             return obj.to_json()
         try:
+            if isinstance(obj, Decimal):
+                return float(obj)
             if isinstance(obj, datetime):
                 if obj.utcoffset() is not None:
                     obj = obj - obj.utcoffset()
