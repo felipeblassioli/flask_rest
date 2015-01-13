@@ -121,7 +121,11 @@ class ArgsParser(object):
         for arg in self.args:
             if arg.name in params:
                 if type(params[arg.name]) != arg.type:
-                    result[arg.name] = arg.coerce(params[arg.name])
+                    try:
+                        result[arg.name] = arg.coerce(params[arg.name])
+                    except Exception as err:
+                        current_app.logger.warning('Coercion failed for param: {}'.format(arg.name))
+                        abort(400)
                 else:
                     result[arg.name] = params[arg.name]
             elif arg.required:
