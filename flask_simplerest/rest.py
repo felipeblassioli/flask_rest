@@ -82,15 +82,17 @@ class RestView(FlaskView):
             current_app.logger.debug(msg)
         return response
 
+from json import loads
 class Argument(object):
 
-    def __init__(self, name, default=None, required=True, type=unicode, description=None, case_sensitive=True):
+    def __init__(self, name, default=None, required=True, type=unicode, description=None, case_sensitive=True, coerce=loads):
         self.name = name
         self.default = default
         self.required = required
         self.type = type
         self.description = description
         self.case_sensitive = case_sensitive
+        self.coerce = coerce
 
     def __repr__(self):
         return "Arg({},default={})".format(self.name,self.default)
@@ -118,7 +120,10 @@ class ArgsParser(object):
             params = request.args
         for arg in self.args:
             if arg.name in params:
-                result[arg.name] = params[arg.name]
+                if type(params[arg.name]) != arg.type:
+                    result[arg.name] = self.coerce(params[arg.name])
+                else:
+                    result[arg.name] = params[arg.name]
             elif arg.required:
                 current_app.logger.warning("Missing required param: {}".format(arg.name))
                 abort(400)
