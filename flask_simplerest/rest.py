@@ -29,7 +29,7 @@ def wrap_response(f):
             if current_app.config.pop('RAISE_EXCEPTIONS', True):
                 raise error
             else:
-                class_name = err.__class__.__name__
+                class_name = error.__class__.__name__
                 if class_name.find("DoesNotExist") != -1:
                     raise RowDoesNotExist(error)
                 elif class_name.find("IntegrityError") != -1:
