@@ -31,11 +31,11 @@ def wrap_response(f):
             else:
                 class_name = error.__class__.__name__
                 if class_name.find("DoesNotExist") != -1:
-                    raise RowDoesNotExist(error)
+                    resp = RowDoesNotExist(error)
                 elif class_name.find("IntegrityError") != -1:
-                    raise DuplicateKeyError(error)
+                    resp = DuplicateKeyError(error)
                 else:
-                    raise ApiError.from_exception(error)
+                    resp = ApiError.from_exception(error)
         if isinstance(resp, Response):
             return resp
         elif isinstance(resp, list):
