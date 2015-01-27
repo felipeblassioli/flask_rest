@@ -26,7 +26,7 @@ def wrap_response(f):
         try:
             resp = f(*args, **kwargs)
         except Exception as error:
-            if current_app.config.pop('RAISE_EXCEPTIONS', True):
+            if current_app.config.get('RAISE_EXCEPTIONS', True):
                 raise error
             else:
                 class_name = error.__class__.__name__
@@ -35,7 +35,7 @@ def wrap_response(f):
                 elif class_name.find("IntegrityError") != -1:
                     resp = DuplicateKeyError(error)
                 else:
-                    resp = ApiError.from_exception(error)
+                    resp = error
         if isinstance(resp, Response):
             return resp
         elif isinstance(resp, list):
@@ -193,7 +193,7 @@ class DefaultJSONEncoder(JSONEncoder):
         return JSONEncoder.default(self, obj)
 
 def default_error_handler(error):
-    if current_app.config.pop('RAISE_EXCEPTIONS', True):
+    if current_app.config.get('RAISE_EXCEPTIONS', True):
         raise error
     # This sucks: the jsonify dumpings won`t allow to_json() to return dict(error)
     resp = jsonify(dict(error=error))
