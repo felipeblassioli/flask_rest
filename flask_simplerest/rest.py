@@ -85,7 +85,7 @@ class RestView(FlaskView):
 from json import loads
 class Argument(object):
 
-    def __init__(self, name, default=None, required=True, type=unicode, description=None, case_sensitive=True, coerce=loads):
+    def __init__(self, name, default=None, required=True, type=None, description=None, case_sensitive=True, coerce=loads):
         self.name = name
         self.default = default
         self.required = required
@@ -120,7 +120,7 @@ class ArgsParser(object):
             params = request.args
         for arg in self.args:
             if arg.name in params:
-                if type(params[arg.name]) != arg.type:
+                if arg.type is not None and type(params[arg.name]) != arg.type:
                     try:
                         result[arg.name] = arg.coerce(params[arg.name])
                     except Exception as err:
