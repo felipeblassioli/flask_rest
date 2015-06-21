@@ -66,7 +66,7 @@ class RestView(FlaskView):
         else:
             current_app.logger.warning("Parser not found! name=[%s]" % name)
             self.args = {}
-        
+
     def after_request(self, name, response):
         req = request.method + ' ' + request.url
         if response.mimetype == 'text/html':
@@ -205,7 +205,7 @@ def default_error_handler(error):
     return resp
 
 class RestAPI(object):
-    def __init__(self, app, json_encoder=DefaultJSONEncoder, error_handler=default_error_handler):
+    def init_app(self, app, json_encoder=DefaultJSONEncoder, error_handler=default_error_handler):
         self.app = app
         self.app.view_classes = {}
         self.json_encoder = json_encoder
@@ -223,4 +223,3 @@ class RestAPI(object):
     def register_all(self, *args):
         for v in args:
             self.register(v)
-
