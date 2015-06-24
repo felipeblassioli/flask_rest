@@ -187,7 +187,7 @@ class RestAPI(object):
         self.json_encoder = json_encoder
 
         self.app.json_encoder = self.json_encoder
-        self.register_error_handlers
+        self.register_error_handlers()
         InfoView.register(self.app)
 
     def register(self, view):
