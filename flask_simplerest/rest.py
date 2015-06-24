@@ -23,19 +23,7 @@ def wrap_response(f):
     """
     @wraps(f)
     def wrapped_f(*args, **kwargs):
-        try:
-            resp = f(*args, **kwargs)
-        except Exception as error:
-            if current_app.config.get('RAISE_EXCEPTIONS', True):
-                raise error
-            else:
-                class_name = error.__class__.__name__
-                if class_name.find("DoesNotExist") != -1:
-                    resp = RowDoesNotExist(error)
-                elif class_name.find("IntegrityError") != -1:
-                    resp = DuplicateKeyError(error)
-                else:
-                    resp = error
+        resp = f(*args, **kwargs)
         if isinstance(resp, Response):
             return resp
         elif isinstance(resp, list):
@@ -192,28 +180,13 @@ class DefaultJSONEncoder(JSONEncoder):
             return list(iterable)
         return JSONEncoder.default(self, obj)
 
-def default_error_handler(error):
-    if current_app.config.get('RAISE_EXCEPTIONS', True):
-        raise error
-    # This sucks: the jsonify dumpings won`t allow to_json() to return dict(error)
-    resp = jsonify(dict(error=error))
-    if hasattr(error, 'status_code'):
-        resp.status_code = error.status_code
-    else:
-        resp.status_code = 400
-    current_app.logger.error(repr(error) + "msg=" + str(error))
-    return resp
-
 class RestAPI(object):
-    def init_app(self, app, json_encoder=DefaultJSONEncoder, error_handler=default_error_handler):
+    def init_app(self, app, json_encoder=DefaultJSONEncoder):
         self.app = app
         self.app.view_classes = {}
         self.json_encoder = json_encoder
-        self.error_handler = error_handler
 
         self.app.json_encoder = self.json_encoder
-        self.app.register_error_handler(Exception, default_error_handler)
-
         InfoView.register(self.app)
 
     def register(self, view):
