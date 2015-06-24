@@ -113,11 +113,13 @@ class ArgsParser(object):
                         result[arg.name] = arg.coerce(params[arg.name])
                     except Exception as err:
                         current_app.logger.warning('Coercion failed for param: {}'.format(arg.name))
+                        raise ApiError('Coercion failed for param: {}'.format(arg.name), 'ArgsParserException', 1, status_code=400)
                         abort(400)
                 else:
                     result[arg.name] = params[arg.name]
             elif arg.required:
                 current_app.logger.warning("Missing required param: {}".format(arg.name))
+                raise ApiError('Missing required param: {}'.format(arg.name), 'ArgsParserException', 2, status_code=400)
                 abort(400)
             else:
                 result[arg.name] = arg.default
@@ -207,9 +209,12 @@ class RestAPI(object):
                 response = jsonify(ex.to_json())
             else:
                 response = jsonify(message=str(ex))
-            response.status_code = (ex.code
-                                    if isinstance(ex, HTTPException)
-                                    else 500)
+            if hasattr(ex, 'status_code'):
+                response.status_code = ex.status_code
+            else:
+                response.status_code = (ex.code
+                                        if isinstance(ex, HTTPException)
+                                        else 500)
             return response
 
         for code in default_exceptions.iterkeys():

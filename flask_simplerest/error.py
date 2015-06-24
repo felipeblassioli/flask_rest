@@ -10,10 +10,11 @@ class ApiError(Error):
 
     status_code = 400
 
-    def __init__(self, emsg, etype="GenericException", ecode=666, details=None):
+    def __init__(self, emsg, etype="GenericException", ecode=666, details=None, status_code=None):
         self.message = emsg
         self.type = etype
         self.code = ecode
+        self.status_code = status_code or 400
         if details != None:
             self.details = details
 
