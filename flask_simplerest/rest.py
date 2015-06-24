@@ -203,7 +203,10 @@ class RestAPI(object):
         from werkzeug.exceptions import HTTPException
         # http://flask.pocoo.org/snippets/83/
         def make_json_error(ex):
-            response = jsonify(message=str(ex))
+            if hasattr(ex, 'to_json'):
+                response = jsonify(ex.to_json())
+            else:
+                response = jsonify(message=str(ex))
             response.status_code = (ex.code
                                     if isinstance(ex, HTTPException)
                                     else 500)
