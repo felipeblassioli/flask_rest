@@ -187,6 +187,7 @@ class RestAPI(object):
         self.json_encoder = json_encoder
 
         self.app.json_encoder = self.json_encoder
+        self.register_error_handlers
         InfoView.register(self.app)
 
     def register(self, view):
@@ -196,3 +197,15 @@ class RestAPI(object):
     def register_all(self, *args):
         for v in args:
             self.register(v)
+
+    def register_error_handlers(self):
+        # http://flask.pocoo.org/snippets/83/
+        def make_json_error(ex):
+            response = jsonify(message=str(ex))
+            response.status_code = (ex.code
+                                    if isinstance(ex, HTTPException)
+                                    else 500)
+            return response
+
+        for code in default_exceptions.iterkeys():
+            self.app.error_handler_spec[None][code] = make_json_error
