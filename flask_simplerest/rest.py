@@ -199,6 +199,8 @@ class RestAPI(object):
             self.register(v)
 
     def register_error_handlers(self):
+        from werkzeug.exceptions import default_exceptions
+        from werkzeug.exceptions import HTTPException
         # http://flask.pocoo.org/snippets/83/
         def make_json_error(ex):
             response = jsonify(message=str(ex))
